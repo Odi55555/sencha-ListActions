@@ -62,7 +62,7 @@
 Ext.define('Ext.ux.plugin.ListActions', {
     extend: 'Ext.Base',
     alias: 'plugin.listactions',
-    
+
     mixins: {
         observable: 'Ext.mixin.Observable'
     },
@@ -73,7 +73,7 @@ Ext.define('Ext.ux.plugin.ListActions', {
         'Ext.DomQuery',
         'Ext.Function'
     ],
-    
+
     config: {
         /**
          *  @cfg {Ext.dataview.List} list
@@ -213,14 +213,14 @@ Ext.define('Ext.ux.plugin.ListActions', {
                 });
             }
         });
-        
+
         me._showAnimation = new Ext.Anim(me.getShowAnimation());
         me._hideAnimation = new Ext.Anim(me.getHideAnimation());
 
         list.addListener('painted', function() {
             me.setActionToggleButton(me.getActionToggleButton());
         });
-        
+
     },
 
     /**
@@ -240,13 +240,25 @@ Ext.define('Ext.ux.plugin.ListActions', {
                     button   = Ext.create('Ext.Button', {
                         ui:         'select',
                         iconMask:   true,
-                        iconCls:    'check2'
+                        iconCls:    'check2',
+                        handler: function(btn) {
+                            var domElem = Ext.dom.Element.get(btn.element.dom.parentElement.id),
+                                list = Ext.getCmp(domElem.findParent('.x-list').id),
+                                listElem = list.down('listitem[itemId="' + btn.element.dom.parentElement.parentElement.parentElement.parentElement.id + '"]'),
+                                recIsSelected = list.isSelected(listElem.getRecord());
+
+                            if(!recIsSelected) {
+                                list.select(listElem.dataIndex, true);
+                            } else {
+                                list.deselect(listElem.dataIndex);
+                            }
+                        }
                     });
 
                 if (selected) {
                     button.element.addCls('selected');
                 }
-                
+
                 button.renderTo(Ext.DomQuery.selectNode('.x-inner.x-list-item-inner', item.element.dom));
 
                 // TODO: Precalculat this stuff
@@ -280,7 +292,7 @@ Ext.define('Ext.ux.plugin.ListActions', {
         } else {
             list.down('toolbar[name="actionsbar"]').hide();
             list.deselectAll();
-            
+
             Ext.each(list.getViewItems(), me.doHideItemAnimation, me);
             Ext.Function.defer(me.doDisableActions, me._hideAnimation.config.duration, me, [suppress]);
         }
@@ -310,7 +322,7 @@ Ext.define('Ext.ux.plugin.ListActions', {
 
         list.setDisableSelection(false);
         list.setMode('MULTI');
-        
+
         if (!suppress) {
             list.fireEvent('actionsenabled', list, this);
         }
@@ -322,7 +334,7 @@ Ext.define('Ext.ux.plugin.ListActions', {
         list.removeCls('x-list-plugin-listaction-enabled');
         list.setDisableSelection(true);
         list.setMode('SINGLE');
-                
+
         if (!suppress) {
             list.fireEvent('actionsdisabled', list, this);
         }
@@ -396,7 +408,7 @@ Ext.define('Ext.ux.plugin.ListActions', {
                     config.button = list.down(config.selector);
                 }
             }
-            
+
             if (config.button) {
                 config.button.addListener('tap',    me.toggleActionButton, me);
                 list.addListener('actionsdisabled', me.toggleActionButton, me);
